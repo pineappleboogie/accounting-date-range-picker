@@ -120,6 +120,26 @@ export function DaysPicker({ value, onSelect, className }: DaysPickerProps) {
     return isSameDay(day, hoveredDate);
   };
 
+  // Determine if hovering before or after rangeStart
+  const isHoveringBefore = rangeStart && hoveredDate && !rangeEnd && hoveredDate < rangeStart;
+
+  // In preview mode, determine which end is visually the "start" (left-rounded) and "end" (right-rounded)
+  const isPreviewVisualStart = (day: Date) => {
+    if (!rangeStart || rangeEnd || !hoveredDate) return false;
+    if (isHoveringBefore) {
+      return isSameDay(day, hoveredDate);
+    }
+    return isSameDay(day, rangeStart);
+  };
+
+  const isPreviewVisualEnd = (day: Date) => {
+    if (!rangeStart || rangeEnd || !hoveredDate) return false;
+    if (isHoveringBefore) {
+      return isSameDay(day, rangeStart);
+    }
+    return isSameDay(day, hoveredDate);
+  };
+
   const handleMouseEnter = (day: Date) => {
     setHoveredDate(day);
   };
@@ -172,6 +192,8 @@ export function DaysPicker({ value, onSelect, className }: DaysPickerProps) {
 
                     const inPreview = isInPreviewRange(day);
                     const isPreviewEndpoint = isPreviewEnd(day);
+                    const previewVisualStart = isPreviewVisualStart(day);
+                    const previewVisualEnd = isPreviewVisualEnd(day);
 
                     return (
                       <button
@@ -187,20 +209,20 @@ export function DaysPicker({ value, onSelect, className }: DaysPickerProps) {
                           isFuture && isCurrentMonth && "text-muted-foreground/40 cursor-not-allowed",
                           // Default hover
                           !isDisabled && !inRange && !inPreview && "hover:bg-accent rounded-md",
-                          isToday && !isStart && !isEnd && !isPreviewEndpoint && "font-medium text-primary",
+                          isToday && !isStart && !isEnd && !previewVisualStart && !previewVisualEnd && "font-medium text-primary",
                           // Confirmed range
                           inRange && !isStart && !isEnd && "bg-accent",
                           (isStart || isEnd) && "bg-primary text-primary-foreground rounded-md relative z-10",
                           inRange && isStart && !isEnd && "rounded-l-md rounded-r-none",
                           inRange && isEnd && !isStart && "rounded-r-md rounded-l-none",
                           inRange && !isStart && !isEnd && "rounded-none",
-                          // Preview range (lighter opacity)
-                          inPreview && !isStart && !isPreviewEndpoint && "bg-accent/50 rounded-none",
-                          // Preview endpoint
-                          isPreviewEndpoint && !isStart && "bg-primary/70 text-primary-foreground rounded-md relative z-10",
-                          // Preview range rounding
-                          inPreview && isStart && "rounded-l-md rounded-r-none",
-                          inPreview && isPreviewEndpoint && !isStart && "rounded-r-md rounded-l-none"
+                          // Preview range in-between (darker gray)
+                          inPreview && !previewVisualStart && !previewVisualEnd && "bg-accent rounded-none",
+                          // Preview endpoints with proper start/end styling
+                          previewVisualStart && "bg-primary/70 text-primary-foreground rounded-l-md rounded-r-none relative z-10",
+                          previewVisualEnd && "bg-primary/70 text-primary-foreground rounded-r-md rounded-l-none relative z-10",
+                          // When start and end are the same day
+                          previewVisualStart && previewVisualEnd && "rounded-md"
                         )}
                       >
                         {isCurrentMonth ? day.getDate() : ""}
@@ -208,7 +230,7 @@ export function DaysPicker({ value, onSelect, className }: DaysPickerProps) {
                           <span
                             className={cn(
                               "absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full",
-                              isStart || isEnd || isPreviewEndpoint
+                              isStart || isEnd || previewVisualStart || previewVisualEnd
                                 ? "bg-primary-foreground"
                                 : "bg-primary"
                             )}

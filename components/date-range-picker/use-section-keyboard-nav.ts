@@ -8,6 +8,8 @@ interface Section {
   itemSelector?: string;
   /** Focus the last item instead of first when entering section */
   focusLast?: boolean;
+  /** Use arrow keys for vertical navigation within this section (like a list) */
+  verticalArrowNav?: boolean;
 }
 
 interface UseSectionKeyboardNavOptions {
@@ -66,10 +68,35 @@ export function useSectionKeyboardNav({
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (!enabled) return;
-      if (event.key !== "Tab") return;
 
       const currentSectionIndex = getCurrentSectionIndex();
       if (currentSectionIndex === -1) return;
+
+      const currentSection = sections[currentSectionIndex];
+
+      // Handle vertical arrow navigation within sections that support it
+      if (currentSection?.verticalArrowNav && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+        const items = getFocusableItems(currentSection);
+        const activeElement = document.activeElement as HTMLElement;
+        const currentItemIndex = items.indexOf(activeElement);
+
+        if (currentItemIndex === -1) return;
+
+        event.preventDefault();
+
+        let nextItemIndex: number;
+        if (event.key === "ArrowUp") {
+          nextItemIndex = Math.max(0, currentItemIndex - 1);
+        } else {
+          nextItemIndex = Math.min(items.length - 1, currentItemIndex + 1);
+        }
+
+        items[nextItemIndex]?.focus();
+        return;
+      }
+
+      // Handle Tab key for section navigation
+      if (event.key !== "Tab") return;
 
       const nextIndex = event.shiftKey
         ? currentSectionIndex - 1
@@ -85,7 +112,7 @@ export function useSectionKeyboardNav({
       // When going backwards (Shift+Tab), focus the last item in that section
       focusSection(nextIndex, event.shiftKey);
     },
-    [enabled, getCurrentSectionIndex, sections.length, focusSection]
+    [enabled, getCurrentSectionIndex, sections, getFocusableItems, focusSection]
   );
 
   useEffect(() => {

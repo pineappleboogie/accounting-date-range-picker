@@ -8,6 +8,12 @@ import {
   startOfYear,
   endOfYear,
   subYears,
+  subDays,
+  subWeeks,
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
   format,
   setMonth,
   setYear,
@@ -20,6 +26,19 @@ import {
 export interface DateRange {
   from: Date;
   to: Date;
+}
+
+// Custom preset types
+export type PresetMode = "last" | "this";
+export type PresetUnit = "days" | "weeks" | "months" | "years";
+
+export interface CustomPreset {
+  id: string;
+  mode: PresetMode;
+  count: number;
+  unit: PresetUnit;
+  label: string;
+  createdAt: number;
 }
 
 // Quick presets
@@ -53,6 +72,68 @@ export function getYearToDate(): DateRange {
     from: startOfYear(now),
     to: now,
   };
+}
+
+// Calculate date range from a custom preset
+export function calculatePresetRange(preset: CustomPreset): DateRange {
+  const now = new Date();
+
+  if (preset.mode === "this") {
+    // "This" mode: current period
+    switch (preset.unit) {
+      case "days":
+        return { from: startOfDay(now), to: endOfDay(now) };
+      case "weeks":
+        return { from: startOfWeek(now), to: endOfWeek(now) };
+      case "months":
+        return { from: startOfMonth(now), to: endOfMonth(now) };
+      case "years":
+        return { from: startOfYear(now), to: endOfYear(now) };
+    }
+  } else {
+    // "Last" mode: completed periods (accounting convention - excludes today/current period)
+    switch (preset.unit) {
+      case "days": {
+        // "Last 7 days" = 7 days ending yesterday
+        const yesterday = subDays(now, 1);
+        const startDate = subDays(yesterday, preset.count - 1);
+        return { from: startOfDay(startDate), to: endOfDay(yesterday) };
+      }
+      case "weeks": {
+        // "Last 2 weeks" = 2 complete weeks ending last week
+        const lastWeek = subWeeks(now, 1);
+        const startWeek = subWeeks(lastWeek, preset.count - 1);
+        return { from: startOfWeek(startWeek), to: endOfWeek(lastWeek) };
+      }
+      case "months": {
+        // "Last 3 months" = 3 complete months ending last month
+        const lastMonth = subMonths(now, 1);
+        const startMonth = subMonths(lastMonth, preset.count - 1);
+        return { from: startOfMonth(startMonth), to: endOfMonth(lastMonth) };
+      }
+      case "years": {
+        // "Last 2 years" = 2 complete years ending last year
+        const lastYear = subYears(now, 1);
+        const startYear = subYears(lastYear, preset.count - 1);
+        return { from: startOfYear(startYear), to: endOfYear(lastYear) };
+      }
+    }
+  }
+}
+
+// Generate a human-readable label for a preset
+export function generatePresetLabel(
+  mode: PresetMode,
+  count: number,
+  unit: PresetUnit
+): string {
+  if (mode === "this") {
+    const unitSingular = unit.slice(0, -1);
+    return `This ${unitSingular}`;
+  } else {
+    const unitLabel = count === 1 ? unit.slice(0, -1) : unit;
+    return `Last ${count} ${unitLabel}`;
+  }
 }
 
 // Month selection
