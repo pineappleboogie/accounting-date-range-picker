@@ -12,6 +12,9 @@ import {
   getLastQuarter,
   getLastYear,
   getYearToDate,
+  getThisMonth,
+  getThisQuarter,
+  getThisYear,
   detectRangeType,
   RangeType,
   PresetMode,
@@ -50,6 +53,9 @@ const QUICK_PRESETS = [
   { label: "Last Quarter", shortcut: "Q", getValue: getLastQuarter },
   { label: "Last Year", shortcut: "Y", getValue: getLastYear },
   { label: "Year to Date", shortcut: "T", getValue: getYearToDate },
+  { label: "This Month", shortcut: "shift+M", getValue: getThisMonth },
+  { label: "This Quarter", shortcut: "shift+Q", getValue: getThisQuarter },
+  { label: "This Year", shortcut: "shift+Y", getValue: getThisYear },
 ] as const;
 
 export function SidebarPresetsVariant({

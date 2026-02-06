@@ -15,7 +15,7 @@ export function usePresetShortcuts(
 ) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      // Ignore if modifier keys are pressed (let browser handle those)
+      // Ignore if meta/ctrl/alt are pressed (let browser handle those)
       if (event.metaKey || event.ctrlKey || event.altKey) {
         return;
       }
@@ -31,7 +31,20 @@ export function usePresetShortcuts(
       }
 
       const key = event.key.toUpperCase();
-      const preset = presets.find((p) => p.shortcut.toUpperCase() === key);
+      const hasShift = event.shiftKey;
+
+      // Find matching preset
+      const preset = presets.find((p) => {
+        const shortcut = p.shortcut.toLowerCase();
+        if (shortcut.startsWith("shift+")) {
+          // Shift modifier required
+          const shortcutKey = shortcut.replace("shift+", "").toUpperCase();
+          return hasShift && key === shortcutKey;
+        } else {
+          // No shift modifier
+          return !hasShift && key === p.shortcut.toUpperCase();
+        }
+      });
 
       if (preset) {
         event.preventDefault();

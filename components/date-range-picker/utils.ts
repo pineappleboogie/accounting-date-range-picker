@@ -74,6 +74,30 @@ export function getYearToDate(): DateRange {
   };
 }
 
+export function getThisMonth(): DateRange {
+  const now = new Date();
+  return {
+    from: startOfMonth(now),
+    to: endOfMonth(now),
+  };
+}
+
+export function getThisQuarter(): DateRange {
+  const now = new Date();
+  return {
+    from: startOfQuarter(now),
+    to: endOfQuarter(now),
+  };
+}
+
+export function getThisYear(): DateRange {
+  const now = new Date();
+  return {
+    from: startOfYear(now),
+    to: endOfYear(now),
+  };
+}
+
 // Calculate date range from a custom preset
 export function calculatePresetRange(preset: CustomPreset): DateRange {
   const now = new Date();
