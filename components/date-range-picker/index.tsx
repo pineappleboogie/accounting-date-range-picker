@@ -31,9 +31,6 @@ interface DateRangePickerProps {
   singleDateMode?: boolean;
 }
 
-const isMac =
-  typeof navigator !== "undefined" && navigator.platform.toUpperCase().includes("MAC");
-
 export function DateRangePicker({
   value,
   onChange,
@@ -74,8 +71,12 @@ export function DateRangePicker({
     if (disabled) return;
 
     function handleKeyDown(event: KeyboardEvent) {
-      const modifierPressed = isMac ? event.metaKey && event.altKey : event.ctrlKey && event.altKey;
-      if (modifierPressed && event.key.toUpperCase() === shortcut.toUpperCase()) {
+      // Skip if user is typing in an input field
+      const target = event.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return;
+      }
+      if (event.key.toUpperCase() === shortcut.toUpperCase()) {
         event.preventDefault();
         setShowTooltip(false);
         setOpen((prev) => !prev);
@@ -117,7 +118,7 @@ export function DateRangePicker({
     }, 100);
   };
 
-  const modifierKey = isMac ? "⌥⌘" : "Ctrl+Alt+";
+  const modifierKey = "";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
