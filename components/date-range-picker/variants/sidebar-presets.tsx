@@ -306,7 +306,7 @@ export function SidebarPresetsVariant({
                 )}>
                   {formatDateRangeFull(hoverPreview || value)}
                 </span>
-                {value && !hoverPreview && (
+                {value && (
                   <Button
                     variant="ghost"
                     size="sm"
