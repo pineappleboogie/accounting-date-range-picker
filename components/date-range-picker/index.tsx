@@ -74,7 +74,7 @@ export function DateRangePicker({
     if (disabled) return;
 
     function handleKeyDown(event: KeyboardEvent) {
-      const modifierPressed = isMac ? event.metaKey : event.ctrlKey;
+      const modifierPressed = isMac ? event.metaKey && event.altKey : event.ctrlKey && event.altKey;
       if (modifierPressed && event.key.toUpperCase() === shortcut.toUpperCase()) {
         event.preventDefault();
         setShowTooltip(false);
@@ -117,7 +117,7 @@ export function DateRangePicker({
     }, 100);
   };
 
-  const modifierKey = isMac ? "⌘" : "Ctrl";
+  const modifierKey = isMac ? "⌥⌘" : "Ctrl+Alt+";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
