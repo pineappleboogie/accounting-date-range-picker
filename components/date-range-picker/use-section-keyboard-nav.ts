@@ -33,7 +33,19 @@ export function useSectionKeyboardNav({
     (section: Section): HTMLElement[] => {
       if (!section.ref.current) return [];
       const selector = section.itemSelector || "button:not([disabled]), [tabindex]:not([tabindex='-1'])";
-      return Array.from(section.ref.current.querySelectorAll(selector));
+      const elements = Array.from(section.ref.current.querySelectorAll<HTMLElement>(selector));
+      // Filter out elements that are inside hidden containers (like inactive TabsContent)
+      return elements.filter((el) => {
+        // Check if element or any ancestor is hidden
+        let current: HTMLElement | null = el;
+        while (current && current !== section.ref.current) {
+          if (current.hidden || current.getAttribute("data-state") === "inactive") {
+            return false;
+          }
+          current = current.parentElement;
+        }
+        return true;
+      });
     },
     []
   );

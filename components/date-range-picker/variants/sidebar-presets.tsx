@@ -57,15 +57,15 @@ export function SidebarPresetsVariant({
     presetId: string | null;
   }>({ active: false, presetId: null });
 
-  // Form data for creating/editing presets
+  // Form data for creating/editing presets - default to "Last 1 month" (matches Last Month preset)
   const [formData, setFormData] = React.useState<{
     mode: PresetMode;
     count: number;
     unit: PresetUnit;
   }>({
     mode: "last",
-    count: 7,
-    unit: "days",
+    count: 1,
+    unit: "months",
   });
 
   // Section refs for keyboard navigation
@@ -94,7 +94,7 @@ export function SidebarPresetsVariant({
   // Handlers for custom presets
   const handleCreateNew = () => {
     setEditMode({ active: true, presetId: null });
-    setFormData({ mode: "last", count: 7, unit: "days" });
+    setFormData({ mode: "last", count: 1, unit: "months" });
   };
 
   const handleEdit = (preset: CustomPreset) => {
@@ -160,19 +160,20 @@ export function SidebarPresetsVariant({
             </>
           )}
 
-          {/* Create new preset button */}
-          <div className="mt-auto pt-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-8 text-sm font-normal text-muted-foreground"
-              onClick={handleCreateNew}
-              disabled={editMode.active}
-            >
-              <Plus className="size-4 mr-2" />
-              Create preset
-            </Button>
-          </div>
+          {/* Create new preset button - hidden when in edit mode */}
+          {!editMode.active && (
+            <div className="mt-auto pt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-8 text-sm font-normal text-muted-foreground"
+                onClick={handleCreateNew}
+              >
+                <Plus className="size-4 mr-2" />
+                Create preset
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Right side - show form or tabs based on edit mode */}
@@ -235,37 +236,39 @@ export function SidebarPresetsVariant({
         </div>
       </div>
 
-      {/* Footer - changes based on edit mode */}
-      {editMode.active ? (
+      {/* Footer - only show in edit mode or when value is selected */}
+      {(editMode.active || value) && (
         <>
           <Separator />
-          <div ref={footerRef} className="flex items-center justify-end gap-2 p-3">
-            <Button variant="ghost" size="sm" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={handleSave}>
-              Save
-            </Button>
+          <div ref={footerRef} className="flex items-center justify-between p-3">
+            {editMode.active ? (
+              <>
+                <div />
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={handleSave}>
+                    Save
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="text-sm text-muted-foreground">
+                  {formatDateRangeFull(value)}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onSelect(undefined)}
+                >
+                  Clear
+                </Button>
+              </>
+            )}
           </div>
         </>
-      ) : (
-        value && (
-          <>
-            <Separator />
-            <div ref={footerRef} className="flex items-center justify-between p-3">
-              <span className="text-sm text-muted-foreground">
-                {formatDateRangeFull(value)}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onSelect(undefined)}
-              >
-                Clear
-              </Button>
-            </div>
-          </>
-        )
       )}
     </div>
   );
