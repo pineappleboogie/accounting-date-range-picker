@@ -48,6 +48,7 @@ export function DateRangePicker({
 }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false);
   const [showTooltip, setShowTooltip] = React.useState(false);
+  const [hoverPreview, setHoverPreview] = React.useState<DateRange | null>(null);
   const buttonRef = React.useRef<HTMLButtonElement>(null);
   const hideTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const showTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -135,7 +136,13 @@ export function DateRangePicker({
             onMouseLeave={handleMouseLeave}
           >
             <CalendarIcon className="mr-2 size-4" />
-            {value ? formatDateRange(value) : placeholder}
+            {hoverPreview ? (
+              <span className="text-muted-foreground">{formatDateRange(hoverPreview)}</span>
+            ) : value ? (
+              formatDateRange(value)
+            ) : (
+              placeholder
+            )}
           </Button>
         </PopoverTrigger>
         {showTooltip && !open && (
@@ -153,6 +160,7 @@ export function DateRangePicker({
         <SidebarPresetsVariant
           value={value}
           onSelect={handleSelect}
+          onHoverPreviewChange={setHoverPreview}
           hideSidebar={hideSidebar}
           hideQuickPresets={hideQuickPresets}
           hideCustomPresets={hideCustomPresets}

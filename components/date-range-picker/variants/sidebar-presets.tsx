@@ -8,7 +8,6 @@ import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DateRange,
-  formatDateRangeFull,
   getLastMonth,
   getLastQuarter,
   getLastYear,
@@ -34,6 +33,8 @@ import { CustomPresetItem } from "../custom-preset-item";
 interface SidebarPresetsVariantProps {
   value?: DateRange;
   onSelect: (range: DateRange | undefined) => void;
+  /** Callback when hover preview changes (for showing in trigger) */
+  onHoverPreviewChange?: (range: DateRange | null) => void;
   /** Hide the entire sidebar (presets section) */
   hideSidebar?: boolean;
   /** Hide quick preset buttons (Last Month, Last Quarter, etc.) */
@@ -54,6 +55,7 @@ const QUICK_PRESETS = [
 export function SidebarPresetsVariant({
   value,
   onSelect,
+  onHoverPreviewChange,
   hideSidebar = false,
   hideQuickPresets = false,
   hideCustomPresets = false,
@@ -61,8 +63,10 @@ export function SidebarPresetsVariant({
 }: SidebarPresetsVariantProps) {
   const [activeTab, setActiveTab] = React.useState(() => detectRangeType(value));
 
-  // Hover preview state - shows date range in footer when hovering over presets/picker items
-  const [hoverPreview, setHoverPreview] = React.useState<DateRange | null>(null);
+  // Hover preview handler - notifies parent to show in trigger
+  const setHoverPreview = React.useCallback((range: DateRange | null) => {
+    onHoverPreviewChange?.(range);
+  }, [onHoverPreviewChange]);
 
   // Custom presets state
   const { presets: customPresets, addPreset, updatePreset, deletePreset } = useCustomPresets();
@@ -281,42 +285,20 @@ export function SidebarPresetsVariant({
         </div>
       </div>
 
-      {/* Footer - show in edit mode, when value is selected, or when hovering */}
-      {(editMode.active || value || hoverPreview) && (
+      {/* Footer - only show in edit mode */}
+      {editMode.active && (
         <>
           <Separator />
           <div ref={footerRef} className="flex items-center justify-between p-3">
-            {editMode.active ? (
-              <>
-                <div />
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={handleCancel}>
-                    Cancel
-                  </Button>
-                  <Button size="sm" onClick={handleSave} disabled={!isFormValid}>
-                    Save
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <span className={cn(
-                  "text-sm",
-                  hoverPreview ? "text-muted-foreground/70" : "text-muted-foreground"
-                )}>
-                  {formatDateRangeFull(hoverPreview || value)}
-                </span>
-                {value && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onSelect(undefined)}
-                  >
-                    Clear
-                  </Button>
-                )}
-              </>
-            )}
+            <div />
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={!isFormValid}>
+                Save
+              </Button>
+            </div>
           </div>
         </>
       )}
