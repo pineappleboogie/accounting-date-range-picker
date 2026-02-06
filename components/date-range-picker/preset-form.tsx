@@ -22,6 +22,7 @@ interface PresetFormProps {
   count: number;
   unit: PresetUnit;
   onChange: (data: { mode: PresetMode; count: number; unit: PresetUnit }) => void;
+  onValidChange?: (isValid: boolean) => void;
   isEditing?: boolean;
 }
 
@@ -41,35 +42,61 @@ export function PresetForm({
   count,
   unit,
   onChange,
+  onValidChange,
   isEditing,
 }: PresetFormProps) {
+  // Local state for the input value (allows empty string while typing)
+  const [countInput, setCountInput] = React.useState(String(count));
+
+  // Sync local state when count prop changes (e.g., when editing a different preset)
+  React.useEffect(() => {
+    setCountInput(String(count));
+  }, [count]);
+
+  // Validate count
+  const parsedCount = parseInt(countInput);
+  const isCountValid = !isNaN(parsedCount) && parsedCount >= 1;
+  const isValid = mode === "this" || isCountValid;
+
+  // Notify parent of validity changes
+  React.useEffect(() => {
+    onValidChange?.(isValid);
+  }, [isValid, onValidChange]);
+
   const handleModeChange = (newMode: PresetMode) => {
     onChange({ mode: newMode, count, unit });
   };
 
   const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newCount = Math.max(1, parseInt(e.target.value) || 1);
-    onChange({ mode, count: newCount, unit });
+    const value = e.target.value;
+    setCountInput(value);
+
+    // Only update parent if valid
+    const parsed = parseInt(value);
+    if (!isNaN(parsed) && parsed >= 1) {
+      onChange({ mode, count: parsed, unit });
+    }
   };
 
   const handleUnitChange = (newUnit: PresetUnit) => {
     onChange({ mode, count, unit: newUnit });
   };
 
-  // Calculate actual date range for preview
+  // Calculate actual date range for preview (use valid count or fallback to 1)
+  const previewCount = isCountValid ? parsedCount : 1;
   const previewPreset: CustomPreset = {
     id: "preview",
     mode,
-    count,
+    count: previewCount,
     unit,
     label: "",
     createdAt: 0,
   };
   const previewRange = calculatePresetRange(previewPreset);
-  const previewDateRange = formatDateRangeFull(previewRange);
+  const previewDateRange = isValid ? formatDateRangeFull(previewRange) : "—";
 
   // For "this" mode or count=1, use singular; otherwise plural
-  const usePlural = mode === "last" && count > 1;
+  const usePlural = mode === "last" && previewCount > 1;
 
   // Match the Tabs structure exactly:
   // - Tabs component: flex flex-col gap-2 (8px gap between TabsList and TabsContent)
@@ -106,9 +133,9 @@ export function PresetForm({
                   type="number"
                   min={1}
                   max={999}
-                  value={count}
+                  value={countInput}
                   onChange={handleCountChange}
-                  className="w-[70px]"
+                  className={`w-[70px] ${!isCountValid ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
                 />
               )}
 

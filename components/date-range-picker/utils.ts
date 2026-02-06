@@ -194,6 +194,12 @@ export function formatDateRange(range: DateRange | undefined): string {
   if (!range) return "";
 
   const { from, to } = range;
+
+  // Single date: show just one date
+  if (isSameDay(from, to)) {
+    return format(from, "MMM d, yyyy");
+  }
+
   const fromYear = getYear(from);
   const toYear = getYear(to);
 

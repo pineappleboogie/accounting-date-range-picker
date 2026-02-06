@@ -21,6 +21,14 @@ interface DateRangePickerProps {
   disabled?: boolean;
   /** Keyboard shortcut to open the picker (e.g., "P" for Cmd/Ctrl+P) */
   shortcut?: string;
+  /** Hide the entire sidebar (presets section) */
+  hideSidebar?: boolean;
+  /** Hide quick preset buttons (Last Month, Last Quarter, etc.) */
+  hideQuickPresets?: boolean;
+  /** Hide custom presets section and "Create preset" button */
+  hideCustomPresets?: boolean;
+  /** Single date selection mode instead of date range */
+  singleDateMode?: boolean;
 }
 
 const isMac =
@@ -33,6 +41,10 @@ export function DateRangePicker({
   className,
   disabled = false,
   shortcut = "P",
+  hideSidebar = false,
+  hideQuickPresets = false,
+  hideCustomPresets = false,
+  singleDateMode = false,
 }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false);
   const [showTooltip, setShowTooltip] = React.useState(false);
@@ -138,7 +150,14 @@ export function DateRangePicker({
         )}
       </div>
       <PopoverContent className="w-auto p-0" align="start">
-        <SidebarPresetsVariant value={value} onSelect={handleSelect} />
+        <SidebarPresetsVariant
+          value={value}
+          onSelect={handleSelect}
+          hideSidebar={hideSidebar}
+          hideQuickPresets={hideQuickPresets}
+          hideCustomPresets={hideCustomPresets}
+          singleDateMode={singleDateMode}
+        />
       </PopoverContent>
     </Popover>
   );

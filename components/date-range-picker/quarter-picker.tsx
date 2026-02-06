@@ -14,6 +14,7 @@ import { useGridKeyboardNav } from "./use-grid-keyboard-nav";
 
 interface QuarterPickerProps {
   onSelect: (range: DateRange) => void;
+  onHover?: (range: DateRange | null) => void;
   selectedRange?: DateRange;
   className?: string;
 }
@@ -23,7 +24,7 @@ type QuarterPosition = { year: number; quarter: number };
 const QUARTERS = [1, 2, 3, 4] as const;
 const YEARS_TO_SHOW = 5;
 
-export function QuarterPicker({ onSelect, selectedRange, className }: QuarterPickerProps) {
+export function QuarterPicker({ onSelect, onHover, selectedRange, className }: QuarterPickerProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const currentYear = getCurrentYear();
@@ -86,6 +87,16 @@ export function QuarterPicker({ onSelect, selectedRange, className }: QuarterPic
 
   const handleMouseEnter = (year: number, quarter: number) => {
     setHoveredQuarter({ year, quarter });
+    if (!onHover) return;
+
+    // When dragging, show the span range; otherwise show single quarter preview
+    if (rangeStart) {
+      const range = getQuarterSpanRange(rangeStart.year, rangeStart.quarter, year, quarter);
+      onHover(range);
+    } else {
+      const range = getQuarterRange(year, quarter);
+      onHover(range);
+    }
   };
 
   const handleMouseUp = (year: number, quarter: number) => {
@@ -116,6 +127,7 @@ export function QuarterPicker({ onSelect, selectedRange, className }: QuarterPic
   const handleContainerMouseLeave = () => {
     if (!isDragging) {
       setHoveredQuarter(null);
+      onHover?.(null);
     }
   };
 
@@ -185,9 +197,7 @@ export function QuarterPicker({ onSelect, selectedRange, className }: QuarterPic
                         e.preventDefault();
                         if (!isFutureQuarter) handleMouseDown(year, quarter);
                       }}
-                      onMouseEnter={() => {
-                        if (!isFutureQuarter) handleMouseEnter(year, quarter);
-                      }}
+                      onMouseEnter={() => handleMouseEnter(year, quarter)}
                       onMouseUp={() => {
                         if (!isFutureQuarter) handleMouseUp(year, quarter);
                       }}

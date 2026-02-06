@@ -14,6 +14,7 @@ import { useGridKeyboardNav } from "./use-grid-keyboard-nav";
 
 interface MonthPickerProps {
   onSelect: (range: DateRange) => void;
+  onHover?: (range: DateRange | null) => void;
   selectedRange?: DateRange;
   className?: string;
 }
@@ -22,7 +23,7 @@ const YEARS_TO_SHOW = 5;
 
 type MonthPosition = { year: number; month: number };
 
-export function MonthPicker({ onSelect, selectedRange, className }: MonthPickerProps) {
+export function MonthPicker({ onSelect, onHover, selectedRange, className }: MonthPickerProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const currentYear = getCurrentYear();
@@ -84,6 +85,16 @@ export function MonthPicker({ onSelect, selectedRange, className }: MonthPickerP
 
   const handleMouseEnter = (year: number, month: number) => {
     setHoveredMonth({ year, month });
+    if (!onHover) return;
+
+    // When dragging, show the span range; otherwise show single month preview
+    if (rangeStart) {
+      const range = getMonthSpanRange(rangeStart.year, rangeStart.month, year, month);
+      onHover(range);
+    } else {
+      const range = getMonthRange(year, month);
+      onHover(range);
+    }
   };
 
   const handleMouseUp = (year: number, month: number) => {
@@ -114,6 +125,7 @@ export function MonthPicker({ onSelect, selectedRange, className }: MonthPickerP
   const handleContainerMouseLeave = () => {
     if (!isDragging) {
       setHoveredMonth(null);
+      onHover?.(null);
     }
   };
 
@@ -184,9 +196,7 @@ export function MonthPicker({ onSelect, selectedRange, className }: MonthPickerP
                         e.preventDefault();
                         if (!isFutureMonth) handleMouseDown(year, index);
                       }}
-                      onMouseEnter={() => {
-                        if (!isFutureMonth) handleMouseEnter(year, index);
-                      }}
+                      onMouseEnter={() => handleMouseEnter(year, index)}
                       onMouseUp={() => {
                         if (!isFutureMonth) handleMouseUp(year, index);
                       }}

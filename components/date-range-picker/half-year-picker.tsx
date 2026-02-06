@@ -8,6 +8,7 @@ import { useGridKeyboardNav } from "./use-grid-keyboard-nav";
 
 interface HalfYearPickerProps {
   onSelect: (range: DateRange) => void;
+  onHover?: (range: DateRange | null) => void;
   selectedRange?: DateRange;
   className?: string;
 }
@@ -17,7 +18,7 @@ type HalfPosition = { year: number; half: 1 | 2 };
 const HALVES = [1, 2] as const;
 const YEARS_TO_SHOW = 5;
 
-export function HalfYearPicker({ onSelect, selectedRange, className }: HalfYearPickerProps) {
+export function HalfYearPicker({ onSelect, onHover, selectedRange, className }: HalfYearPickerProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const currentYear = getCurrentYear();
@@ -81,6 +82,16 @@ export function HalfYearPicker({ onSelect, selectedRange, className }: HalfYearP
 
   const handleMouseEnter = (year: number, half: 1 | 2) => {
     setHoveredHalf({ year, half });
+    if (!onHover) return;
+
+    // When dragging, show the span range; otherwise show single half-year preview
+    if (rangeStart) {
+      const range = getHalfYearSpanRange(rangeStart.year, rangeStart.half, year, half);
+      onHover(range);
+    } else {
+      const range = getHalfYearRange(year, half);
+      onHover(range);
+    }
   };
 
   const handleMouseUp = (year: number, half: 1 | 2) => {
@@ -111,6 +122,7 @@ export function HalfYearPicker({ onSelect, selectedRange, className }: HalfYearP
   const handleContainerMouseLeave = () => {
     if (!isDragging) {
       setHoveredHalf(null);
+      onHover?.(null);
     }
   };
 
@@ -180,9 +192,7 @@ export function HalfYearPicker({ onSelect, selectedRange, className }: HalfYearP
                         e.preventDefault();
                         if (!isFutureHalf) handleMouseDown(year, half);
                       }}
-                      onMouseEnter={() => {
-                        if (!isFutureHalf) handleMouseEnter(year, half);
-                      }}
+                      onMouseEnter={() => handleMouseEnter(year, half)}
                       onMouseUp={() => {
                         if (!isFutureHalf) handleMouseUp(year, half);
                       }}

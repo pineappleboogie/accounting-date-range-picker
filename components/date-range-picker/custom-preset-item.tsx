@@ -2,6 +2,17 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Pencil, Trash2 } from "lucide-react";
 import { CustomPreset, calculatePresetRange, DateRange } from "./utils";
 import { cn } from "@/lib/utils";
@@ -11,6 +22,7 @@ interface CustomPresetItemProps {
   onSelect: (range: DateRange) => void;
   onEdit: (preset: CustomPreset) => void;
   onDelete: (id: string) => void;
+  onHover?: (range: DateRange | null) => void;
   disabled?: boolean;
 }
 
@@ -19,6 +31,7 @@ export function CustomPresetItem({
   onSelect,
   onEdit,
   onDelete,
+  onHover,
   disabled,
 }: CustomPresetItemProps) {
   const [showActions, setShowActions] = React.useState(false);
@@ -29,11 +42,24 @@ export function CustomPresetItem({
     onSelect(range);
   };
 
+  const handleMouseEnter = () => {
+    setShowActions(true);
+    if (onHover) {
+      const range = calculatePresetRange(preset);
+      onHover(range);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setShowActions(false);
+    onHover?.(null);
+  };
+
   return (
     <div
       className="group relative"
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <Button
         variant="ghost"
@@ -63,18 +89,38 @@ export function CustomPresetItem({
         >
           <Pencil className="size-3" />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-6"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(preset.id);
-          }}
-          disabled={disabled}
-        >
-          <Trash2 className="size-3" />
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              disabled={disabled}
+            >
+              <Trash2 className="size-3" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete preset</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete &ldquo;{preset.label}&rdquo;? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => onDelete(preset.id)}
+                className="bg-destructive text-white hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

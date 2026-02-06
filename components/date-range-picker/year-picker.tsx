@@ -8,13 +8,14 @@ import { useGridKeyboardNav } from "./use-grid-keyboard-nav";
 
 interface YearPickerProps {
   onSelect: (range: DateRange) => void;
+  onHover?: (range: DateRange | null) => void;
   selectedRange?: DateRange;
   className?: string;
 }
 
 const YEARS_TO_SHOW = 15;
 
-export function YearPicker({ onSelect, selectedRange, className }: YearPickerProps) {
+export function YearPicker({ onSelect, onHover, selectedRange, className }: YearPickerProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const currentYear = getCurrentYear();
@@ -64,6 +65,16 @@ export function YearPicker({ onSelect, selectedRange, className }: YearPickerPro
 
   const handleMouseEnter = (year: number) => {
     setHoveredYear(year);
+    if (!onHover) return;
+
+    // When dragging, show the span range; otherwise show single year preview
+    if (rangeStart !== null) {
+      const range = getYearSpanRange(rangeStart, year);
+      onHover(range);
+    } else {
+      const range = getYearRange(year);
+      onHover(range);
+    }
   };
 
   const handleMouseUp = (year: number) => {
@@ -89,6 +100,7 @@ export function YearPicker({ onSelect, selectedRange, className }: YearPickerPro
   const handleContainerMouseLeave = () => {
     if (!isDragging) {
       setHoveredYear(null);
+      onHover?.(null);
     }
   };
 
@@ -150,9 +162,7 @@ export function YearPicker({ onSelect, selectedRange, className }: YearPickerPro
                   e.preventDefault();
                   if (!isFutureYear) handleMouseDown(year);
                 }}
-                onMouseEnter={() => {
-                  if (!isFutureYear) handleMouseEnter(year);
-                }}
+                onMouseEnter={() => handleMouseEnter(year)}
                 onMouseUp={() => {
                   if (!isFutureYear) handleMouseUp(year);
                 }}

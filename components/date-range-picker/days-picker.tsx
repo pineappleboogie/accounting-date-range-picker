@@ -20,13 +20,16 @@ import { useGridKeyboardNav } from "./use-grid-keyboard-nav";
 interface DaysPickerProps {
   value?: DateRange;
   onSelect: (range: DateRange | undefined) => void;
+  onHover?: (range: DateRange | null) => void;
   className?: string;
+  /** Single date selection mode - clicking selects immediately with from === to */
+  singleDateMode?: boolean;
 }
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const MONTHS_TO_SHOW = 12;
 
-export function DaysPicker({ value, onSelect, className }: DaysPickerProps) {
+export function DaysPicker({ value, onSelect, onHover, className, singleDateMode = false }: DaysPickerProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [rangeStart, setRangeStart] = React.useState<Date | null>(
@@ -70,6 +73,14 @@ export function DaysPicker({ value, onSelect, className }: DaysPickerProps) {
   }, [value]);
 
   const handleDayClick = (day: Date) => {
+    if (singleDateMode) {
+      // In single date mode, immediately select with from === to
+      setRangeStart(day);
+      setRangeEnd(day);
+      onSelect({ from: day, to: day });
+      return;
+    }
+
     if (!rangeStart || (rangeStart && rangeEnd)) {
       // Start new selection
       setRangeStart(day);
@@ -142,10 +153,22 @@ export function DaysPicker({ value, onSelect, className }: DaysPickerProps) {
 
   const handleMouseEnter = (day: Date) => {
     setHoveredDate(day);
+    if (!onHover) return;
+
+    // When in active selection mode (rangeStart set but rangeEnd not yet), show the range preview
+    if (rangeStart && !rangeEnd) {
+      const start = rangeStart < day ? rangeStart : day;
+      const end = rangeStart < day ? day : rangeStart;
+      onHover({ from: start, to: end });
+    } else {
+      // Otherwise show single day preview
+      onHover({ from: day, to: day });
+    }
   };
 
   const handleMouseLeave = () => {
     setHoveredDate(null);
+    onHover?.(null);
   };
 
   // Keyboard navigation (arrow keys within the grid)
